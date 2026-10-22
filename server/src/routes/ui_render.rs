@@ -11,6 +11,7 @@ use serde_json::Value;
 use validator::Validate;
 
 use crate::error::{AppError, ErrorCode};
+use crate::obfuscation::{ObfuscationError, ObfuscationOptions};
 use crate::response::ApiResponse;
 use crate::state::AppState;
 use crate::ui_template::{DeviceInfo, RenderedPage, TemplateEngine, TemplateError};
@@ -27,18 +28,49 @@ pub struct UiRenderRequest {
     /// 设备信息；缺省按 390×844 web 处理。
     #[serde(default)]
     pub device_info: Option<DeviceInfo>,
+    /// 会话标识；同一会话复用类名映射，缺省则每次请求生成新映射。
+    #[serde(default)]
+    pub session_id: Option<String>,
+    /// 请求级混淆选项（缺省走服务端配置）。
+    #[serde(default)]
+    pub obfuscation: Option<ObfuscationOptions>,
 }
 
 /// 渲染并返回单文件 HTML。
 pub async fn render_ui(
-    State(_state): State<AppState>,
+    State(state): State<AppState>,
     ValidatedJson(payload): ValidatedJson<UiRenderRequest>,
 ) -> Result<Json<ApiResponse<RenderedPage>>, AppError> {
     let device = payload.device_info.unwrap_or_default();
-    let page = TemplateEngine::global()
+    let mut page = TemplateEngine::global()
         .render(&payload.scene_code, &payload.business_data, &device)
         .map_err(map_template_error)?;
+
+    let options = payload.obfuscation.unwrap_or_default();
+    let config = state.config.obfuscation_config().with_options(&options);
+    let result = state
+        .obfuscation
+        .obfuscate(&page.html, &config, payload.session_id.as_deref())
+        .map_err(map_obfuscation_error)?;
+    page.html = result.html;
+    tracing::debug!(
+        scene_code = %page.scene_code,
+        level = %result.stats.level,
+        classes = result.stats.classes_renamed,
+        identifiers = result.stats.identifiers_renamed,
+        wrappers = result.stats.wrappers_added,
+        "ui html obfuscated"
+    );
     Ok(Json(ApiResponse::success(page)))
+}
+
+fn map_obfuscation_error(error: ObfuscationError) -> AppError {
+    match error {
+        ObfuscationError::InvalidSessionId(message) | ObfuscationError::InvalidHtml(message) => {
+            AppError::invalid_param(message)
+        }
+        other => AppError::internal(other),
+    }
 }
 
 fn map_template_error(error: TemplateError) -> AppError {

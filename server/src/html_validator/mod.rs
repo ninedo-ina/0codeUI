@@ -19,10 +19,10 @@ mod checks;
 pub mod config;
 mod css;
 pub mod model;
-mod sink;
-mod source;
-mod tokenizer;
-mod url;
+pub(crate) mod sink;
+pub(crate) mod source;
+pub(crate) mod tokenizer;
+pub(crate) mod url;
 
 pub use config::ValidatorConfig;
 pub use model::{

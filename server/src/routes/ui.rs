@@ -8,6 +8,7 @@ use axum::Json;
 
 use crate::error::{AppError, ErrorCode};
 use crate::middleware::auth::AuthUser;
+use crate::obfuscation::ObfuscationError;
 use crate::response::ApiResponse;
 use crate::state::AppState;
 use crate::ui::generate::{generate_ui, UiGenerateData, UiGenerateRequest};
@@ -20,8 +21,23 @@ pub async fn generate(
     ValidatedJson(payload): ValidatedJson<UiGenerateRequest>,
 ) -> Result<Json<ApiResponse<UiGenerateData>>, AppError> {
     ensure_user_scope(&state, &auth, &payload.user_id)?;
-    let data = generate_ui(&payload)?;
+    let mut data = generate_ui(&payload)?;
+    let config = state.config.obfuscation_config();
+    let result = state
+        .obfuscation
+        .obfuscate(&data.html_content, &config, None)
+        .map_err(map_obfuscation_error)?;
+    data.html_content = result.html;
     Ok(Json(ApiResponse::success(data)))
+}
+
+fn map_obfuscation_error(error: ObfuscationError) -> AppError {
+    match error {
+        ObfuscationError::InvalidSessionId(message) | ObfuscationError::InvalidHtml(message) => {
+            AppError::invalid_param(message)
+        }
+        other => AppError::internal(other),
+    }
 }
 
 /// 生产模式下请求的 `user_id` 必须与凭据一致；开发模式允许跨用户联调。

@@ -11,6 +11,8 @@ use crate::intent_agent::ToolCallAgent;
 use crate::middleware::rate_limit::RateLimiter;
 use crate::middleware::telemetry_quota::TelemetryQuota;
 use crate::model::{ModelError, ModelGateway};
+use crate::obfuscation::adapter::EngineObfuscator;
+use crate::obfuscation::ObfuscationEngine;
 use crate::pipeline::Pipeline;
 use crate::replay::ReplayService;
 use crate::repository::Repository;
@@ -36,6 +38,8 @@ pub struct AppState {
     pub intent_agent: Arc<ToolCallAgent>,
     /// 意图执行编排服务。
     pub intent_service: Arc<IntentService>,
+    /// 输出混淆引擎（会话级类名映射表）。
+    pub obfuscation: Arc<ObfuscationEngine>,
     /// 进程启动时间（用于健康检查 uptime）。
     pub started_at: Instant,
 }
@@ -60,10 +64,18 @@ impl AppState {
             config.rate_limit_enabled,
         );
         let db = Arc::new(db);
-        let pipeline = Arc::new(Pipeline::new(
+        let obfuscation = Arc::new(ObfuscationEngine::new(
+            config.ui_obfuscation_session_ttl_secs,
+            config.ui_obfuscation_max_sessions,
+        ));
+        let pipeline = Arc::new(Pipeline::with_obfuscator(
             config.pipeline.clone(),
             gateway.clone(),
             db.clone(),
+            Arc::new(EngineObfuscator::new(
+                obfuscation.clone(),
+                config.obfuscation_config(),
+            )),
         ));
         let telemetry_quota = TelemetryQuota::new(
             config.telemetry_quota_per_minute,
@@ -87,6 +99,7 @@ impl AppState {
             pipeline,
             intent_agent,
             intent_service: Arc::new(intent_service),
+            obfuscation,
             started_at: Instant::now(),
         }
     }

@@ -183,6 +183,11 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/ui/model/generate \
 | `PROFILE_MAX_ALPHA` | `0.6` | 画像 EWMA 平滑系数上限，`[base, 1]` |
 | `PROFILE_MIN_UPDATE_INTERVAL_SECS` | `60` | 画像自动更新最小间隔（秒） |
 | `PROFILE_MAX_OBSERVATIONS` | `1000` | 单次画像刷新最多处理样本数 |
+| `UI_OBFUSCATION_ENABLED` | `true` | 是否对下发 HTML 做输出混淆 |
+| `UI_OBFUSCATION_LEVEL` | `standard` | 混淆强度：`off` / `basic` / `standard` / `aggressive` |
+| `UI_OBFUSCATION_SESSION_TTL_SECS` | `1800` | 会话类名映射表 TTL |
+| `UI_OBFUSCATION_MAX_SESSIONS` | `1000` | 会话映射表容量 |
+| `UI_OBFUSCATION_MIN_IDENTIFIER_COVERAGE` | `0.8` | 非保留标识符覆盖率下限 |
 
 > **密钥管理**：仅通过环境变量 / Secrets 注入，严禁写入仓库或数据库。生产环境请用部署平台（systemd `EnvironmentFile`、Docker secrets、K8s Secret 等）下发。
 
@@ -463,6 +468,30 @@ cat page.html | cargo run -p intimeui-server --bin intimeui-validate -- -
 ```
 
 **可配置项**（`ValidatorConfig`）：`max_bytes`、`max_depth`、`max_issues`、`require_doctype`、`allow_data_uris`、`allowed_external_hosts`、`allowed_event_attributes`、`forbidden_elements`。
+### 输出混淆与防逆向（M1 · REQ-202610-1184）
+
+单文件 HTML 在返回前会经过输出混淆层：DOM 包装节点 / 属性顺序随机化、CSS 类名按会话
+映射表随机化、JS 局部变量与参数名随机化，并在输出后再次通过 REQ-202610-1173 校验器。
+
+- **强度**：`off` / `basic` / `standard`（默认）/ `aggressive`，支持环境变量与请求级覆盖；
+- **防指纹**：同一页面两次请求输出不同；同一会话类名映射稳定，不同会话映射不同；
+- **接口**：`POST /api/v1/ui/obfuscate` 可直接混淆任意完整 HTML 并返回统计；
+  `/api/v1/ui/render` 与 `/api/v1/ui/generate` 自动执行同一套混淆；
+- **安全**：混淆失败返回 500，不会下发未复检的 HTML；CSS 组合选择器 / 子元素伪类存在时
+  自动关闭包装节点，避免破坏布局。
+
+```rust
+use intimeui_server::obfuscation::{obfuscate_html, ObfuscationConfig, ObfuscationLevel};
+
+let config = ObfuscationConfig {
+    level: ObfuscationLevel::Aggressive,
+    ..ObfuscationConfig::default()
+};
+let result = obfuscate_html(html, &config, Some("sess_abc123"))?;
+println!("{} -> {} bytes, coverage={}", result.stats.bytes_before, result.stats.bytes_after, result.stats.identifier_coverage);
+```
+
+详见 [`docs/output-obfuscation.md`](docs/output-obfuscation.md)。
 
 ### 测试与检查
 
@@ -521,7 +550,8 @@ docker exec intimeui-server intimeui-seed
 ## 路线图（对应 REQ-202610-1168 拆解）
 
 - **M0 基础工程**：REQ-202610-1169 服务基座（已交付）、REQ-202610-1170 数据模型与种子数据（已交付）
-- **M1 模板兜底链路**：REQ-202610-1171 UI 生成接口与场景注册（已交付）、REQ-202610-1172 静态模板引擎（已交付）、REQ-202610-1173 单文件 HTML 校验器（已交付）
+- **M1 模板兜底链路**：REQ-202610-1171 UI 生成接口与场景注册（已交付）、REQ-202610-1172 静态模板引擎（已交付）、REQ-202610-1173 单文件 HTML 校验器（已交付：库 API + CLI）
+- **M1 输出安全**：REQ-202610-1184 输出混淆与防逆向（已交付：DOM / CSS / JS 随机化 + 会话映射 + 复检）
 - **M2 埋点画像**：REQ-202610-1174 埋点事件采集（已交付）；REQ-202610-1175 / 1176 待排期
 - **M3 意图引擎**：REQ-202610-1180 意图理解与 Tool Call Agent（已交付）
 - **M4 动态生成**：待排期

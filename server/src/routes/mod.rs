@@ -4,7 +4,8 @@
 //! - 受保护路由（需鉴权）：`/api/v1/me`、`/api/v1/echo`、
 //!   `/api/v1/orders/{order_id}/business-data`、`/api/v1/users/{user_id}/balance`、
 //!   `/api/v1/telemetry/events`、`/api/v1/telemetry/aggregate`、
-//!   `/api/v1/intent/understand`、`/api/v1/intent/tools`、`/api/v1/ui/render`；
+//!   `/api/v1/intent/understand`、`/api/v1/intent/tools`、`/api/v1/ui/render`、
+//!   `/api/v1/ui/obfuscate`；
 //! - 需鉴权且需防重放签名的写接口（REQ-202610-1186）：
 //!   `/api/v1/telemetry/event`、`/api/v1/intent/execute`、`/api/v1/ui/generate`；
 //! - 未匹配路径统一返回 404 响应结构。
@@ -19,6 +20,7 @@ pub mod pipeline;
 pub mod profiles;
 pub mod telemetry;
 pub mod ui;
+pub mod ui_obfuscate;
 pub mod ui_render;
 
 use axum::middleware::from_fn_with_state;
@@ -71,6 +73,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/ui/model/stream", post(model::stream))
         .route("/api/v1/ui/model/info", get(model::info))
         .route("/api/v1/ui/model/metrics", get(model::metrics))
+        .route("/api/v1/ui/obfuscate", post(ui_obfuscate::obfuscate))
         .route(
             "/api/v1/users/{user_id}/profile",
             get(profiles::get_profile).put(profiles::put_profile),

@@ -27,6 +27,7 @@ pub mod intent_agent;
 pub mod middleware;
 pub mod model;
 pub mod models;
+pub mod obfuscation;
 pub mod pipeline;
 pub mod profile;
 pub mod prompt;
