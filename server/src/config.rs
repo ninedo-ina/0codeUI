@@ -8,6 +8,7 @@ use std::str::FromStr;
 
 use crate::model::config::ModelConfig;
 use crate::pipeline::config::PipelineConfig;
+use crate::replay::SigningSecret;
 
 /// 运行环境。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -105,6 +106,30 @@ pub struct AppConfig {
     pub rate_limit_burst: u32,
     /// 请求处理超时秒数：`REQUEST_TIMEOUT_SECS`（默认 30）。
     pub request_timeout_secs: u64,
+    /// 是否启用埋点防刷配额：`TELEMETRY_QUOTA_ENABLED`（默认 true）。
+    pub telemetry_quota_enabled: bool,
+    /// 埋点配额：每用户每分钟允许的事件条数（`TELEMETRY_QUOTA_PER_MINUTE`，默认 600）。
+    pub telemetry_quota_per_minute: u32,
+    /// 埋点单次上报最大条数（`TELEMETRY_MAX_BATCH_SIZE`，默认 100）。
+    pub telemetry_max_batch_size: usize,
+    /// 是否启用 API 防重放签名校验（`REPLAY_PROTECTION_ENABLED`，默认 false）。
+    ///
+    /// 兼容旧变量 `TELEMETRY_REPLAY_ENABLED`（仅作为未设置新变量时的回退）。
+    pub replay_protection_enabled: bool,
+    /// 防重放 HMAC 共享密钥（`REPLAY_SIGNING_SECRET`，启用时必填且至少 32 字节）。
+    ///
+    /// 仅从环境变量注入，`Debug` 输出已脱敏，不落库、不入仓。
+    pub replay_signing_secret: Option<SigningSecret>,
+    /// 允许的客户端时钟偏移秒数（`REPLAY_CLOCK_SKEW_SECS`，默认 300，范围 30..=900）。
+    pub replay_clock_skew_secs: i64,
+    /// Nonce 去重记录的保留秒数（`REPLAY_NONCE_TTL_SECS`，默认 600，且不小于 2×时钟偏移）。
+    pub replay_nonce_ttl_secs: i64,
+    /// 防重放中间件允许缓冲的最大请求体字节数（`REPLAY_MAX_BODY_BYTES`，默认 2 MiB）。
+    pub replay_max_body_bytes: usize,
+    /// 意图 Agent 模型输出最大尝试次数：`INTENT_AGENT_MAX_ATTEMPTS`（默认 2，范围 1..=3）。
+    pub intent_agent_max_attempts: usize,
+    /// 意图会话 TTL 秒数：`INTENT_SESSION_TTL_SECS`（默认 1800，最小 1）。
+    pub intent_session_ttl_secs: u64,
     /// 数据库连接串：`DATABASE_URL`（默认 `sqlite://data/intimeui.db`）。
     pub database_url: String,
     /// UI 生成模型接入与推理服务配置（`MODEL_*`）。
@@ -193,6 +218,88 @@ impl AppConfig {
                 message: "must be >= 1".to_string(),
             });
         }
+
+        let telemetry_quota_enabled = match optional_env("TELEMETRY_QUOTA_ENABLED") {
+            Some(value) => parse_bool("TELEMETRY_QUOTA_ENABLED", &value)?,
+            None => true,
+        };
+        let telemetry_quota_per_minute = env_parse("TELEMETRY_QUOTA_PER_MINUTE", 600u32)?;
+        if telemetry_quota_per_minute == 0 {
+            return Err(ConfigError {
+                key: "TELEMETRY_QUOTA_PER_MINUTE",
+                message: "must be >= 1".to_string(),
+            });
+        }
+        let telemetry_max_batch_size = env_parse("TELEMETRY_MAX_BATCH_SIZE", 100usize)?;
+        if !(1..=1000).contains(&telemetry_max_batch_size) {
+            return Err(ConfigError {
+                key: "TELEMETRY_MAX_BATCH_SIZE",
+                message: "must be within 1..=1000".to_string(),
+            });
+        }
+        if telemetry_quota_per_minute < telemetry_max_batch_size as u32 {
+            return Err(ConfigError {
+                key: "TELEMETRY_QUOTA_PER_MINUTE",
+                message: "must be >= TELEMETRY_MAX_BATCH_SIZE".to_string(),
+            });
+        }
+        let replay_protection_enabled = match optional_env("REPLAY_PROTECTION_ENABLED") {
+            Some(value) => parse_bool("REPLAY_PROTECTION_ENABLED", &value)?,
+            None => match optional_env("TELEMETRY_REPLAY_ENABLED") {
+                Some(value) => parse_bool("TELEMETRY_REPLAY_ENABLED", &value)?,
+                None => false,
+            },
+        };
+        let replay_signing_secret = optional_env("REPLAY_SIGNING_SECRET").map(SigningSecret::new);
+        if let Some(secret) = &replay_signing_secret {
+            if secret.len() < 32 {
+                return Err(ConfigError {
+                    key: "REPLAY_SIGNING_SECRET",
+                    message: "must be at least 32 bytes".to_string(),
+                });
+            }
+        }
+        if replay_protection_enabled && replay_signing_secret.is_none() {
+            return Err(ConfigError {
+                key: "REPLAY_SIGNING_SECRET",
+                message: "is required when REPLAY_PROTECTION_ENABLED=true".to_string(),
+            });
+        }
+        let replay_clock_skew_secs = env_parse("REPLAY_CLOCK_SKEW_SECS", 300i64)?;
+        if !(30..=900).contains(&replay_clock_skew_secs) {
+            return Err(ConfigError {
+                key: "REPLAY_CLOCK_SKEW_SECS",
+                message: "must be within 30..=900".to_string(),
+            });
+        }
+        let replay_nonce_ttl_secs = env_parse("REPLAY_NONCE_TTL_SECS", 600i64)?;
+        if replay_nonce_ttl_secs < replay_clock_skew_secs.saturating_mul(2) {
+            return Err(ConfigError {
+                key: "REPLAY_NONCE_TTL_SECS",
+                message: "must be >= 2 × REPLAY_CLOCK_SKEW_SECS".to_string(),
+            });
+        }
+        let replay_max_body_bytes = env_parse("REPLAY_MAX_BODY_BYTES", 2 * 1024 * 1024usize)?;
+        if !(1024..=16 * 1024 * 1024).contains(&replay_max_body_bytes) {
+            return Err(ConfigError {
+                key: "REPLAY_MAX_BODY_BYTES",
+                message: "must be within 1024..=16777216".to_string(),
+            });
+        }
+        let intent_agent_max_attempts = env_parse("INTENT_AGENT_MAX_ATTEMPTS", 2usize)?;
+        if !(1..=3).contains(&intent_agent_max_attempts) {
+            return Err(ConfigError {
+                key: "INTENT_AGENT_MAX_ATTEMPTS",
+                message: "must be between 1 and 3".to_string(),
+            });
+        }
+        let intent_session_ttl_secs = env_parse("INTENT_SESSION_TTL_SECS", 1800u64)?;
+        if intent_session_ttl_secs == 0 {
+            return Err(ConfigError {
+                key: "INTENT_SESSION_TTL_SECS",
+                message: "must be >= 1".to_string(),
+            });
+        }
         let database_url = env_string("DATABASE_URL", "sqlite://data/intimeui.db");
         let model = ModelConfig::from_env()?;
         if env == Environment::Prod && model.provider.is_mock() {
@@ -245,6 +352,16 @@ impl AppConfig {
             rate_limit_rps,
             rate_limit_burst,
             request_timeout_secs,
+            telemetry_quota_enabled,
+            telemetry_quota_per_minute,
+            telemetry_max_batch_size,
+            replay_protection_enabled,
+            replay_signing_secret,
+            replay_clock_skew_secs,
+            replay_nonce_ttl_secs,
+            replay_max_body_bytes,
+            intent_agent_max_attempts,
+            intent_session_ttl_secs,
             database_url,
             model,
             profile_ewma_alpha,
@@ -271,6 +388,16 @@ impl Default for AppConfig {
             rate_limit_rps: 50.0,
             rate_limit_burst: 100,
             request_timeout_secs: 30,
+            telemetry_quota_enabled: true,
+            telemetry_quota_per_minute: 600,
+            telemetry_max_batch_size: 100,
+            replay_protection_enabled: false,
+            replay_signing_secret: None,
+            replay_clock_skew_secs: 300,
+            replay_nonce_ttl_secs: 600,
+            replay_max_body_bytes: 2 * 1024 * 1024,
+            intent_agent_max_attempts: 2,
+            intent_session_ttl_secs: 1800,
             database_url: "sqlite://data/intimeui.db".to_string(),
             model: ModelConfig::default(),
             profile_ewma_alpha: 0.15,

@@ -15,10 +15,15 @@ http-body-util = "0.1"
 hyper = { version = "1", features = ["client", "http1"] }
 hyper-util = { version = "0.1", features = ["client-legacy", "http1", "tokio"] }
 dotenvy = "0.15"
+hex = "0.4"
+hmac = "0.12"
+regex = "1"
 rust_decimal = { version = "1", features = ["serde-with-arbitrary-precision"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["arbitrary_precision"] }
+sha2 = "0.10"
 sqlx = { version = "0.8.6", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros", "chrono"] }
+subtle = "2"
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time", "net"] }
 tower-http = { version = "0.6", features = ["trace", "request-id", "catch-panic"] }

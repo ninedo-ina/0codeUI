@@ -4,9 +4,12 @@
 //! 金额在数据库中以「分」存储，在领域层以 [`rust_decimal::Decimal`] 暴露。
 
 mod capabilities;
+mod intent_sessions;
 mod orders;
 mod products;
 mod profiles;
+mod replay;
+mod telemetry;
 mod users;
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 //! InTimeUI 后端服务（M0 基础工程）。
 //!
 //! 模块划分：
@@ -6,11 +8,13 @@
 //! - [`error`]：全局错误码规范与错误类型；
 //! - [`models`]：核心业务领域模型；
 //! - [`repository`]：数据访问层与原子能力实现；
+//! - [`replay`]：API 防重放签名协议与校验服务（REQ-202610-1186）；
 //! - [`response`]：统一响应结构 `{code, msg, data}`；
-//! - [`middleware`]：鉴权 / 限流 / 超时中间件；
+//! - [`middleware`]：鉴权 / 限流 / 超时 / 防重放中间件；
 //! - [`routes`]：路由注册与端点实现；
 //! - [`state`]：应用共享状态；
 //! - [`telemetry`]：结构化日志；
+//! - [`telemetry_events`]：埋点事件领域模型（REQ-202610-1174）；
 //! - [`ui`]：UI 生成契约、场景注册与模板渲染；
 //! - [`validation`]：请求参数校验提取器。
 
@@ -18,17 +22,21 @@ pub mod config;
 pub mod db;
 pub mod error;
 pub mod html_validator;
+pub mod intent;
+pub mod intent_agent;
 pub mod middleware;
 pub mod model;
 pub mod models;
 pub mod pipeline;
 pub mod profile;
 pub mod prompt;
+pub mod replay;
 pub mod repository;
 pub mod response;
 pub mod routes;
 pub mod state;
 pub mod telemetry;
+pub mod telemetry_events;
 pub mod ui;
 pub mod ui_template;
 pub mod validation;
