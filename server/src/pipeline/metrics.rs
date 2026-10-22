@@ -149,7 +149,7 @@ impl PipelineMetrics {
                 count: *count,
             })
             .collect();
-        reasons.sort_by(|left, right| right.count.cmp(&left.count));
+        reasons.sort_by_key(|left| std::cmp::Reverse(left.count));
 
         PipelineMetricsSnapshot {
             total_requests: total,
@@ -217,6 +217,7 @@ mod tests {
             html_content: "<!DOCTYPE html><html></html>".to_string(),
             degraded,
             degradation_reason: reason,
+            degradation_detail: None,
             cache_hit,
             model: None,
             prompt_hash: None,

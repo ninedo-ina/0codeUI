@@ -111,6 +111,16 @@ pub static SCENES: &[SceneDefinition] = &[
         },
         renderer: Some(crate::ui::template::render_product_detail),
     },
+    SceneDefinition {
+        code: "FLASH_SALE_PAGE",
+        config: SceneConfig {
+            display_name: "限时抢购页",
+            strategy: RenderStrategy::Template,
+            template_version: "v1",
+            max_business_data_bytes: 64 * 1024,
+        },
+        renderer: Some(crate::ui_template::render_flash_sale_scene),
+    },
 ];
 
 /// 全局注册表实例。
@@ -125,7 +135,8 @@ mod tests {
         assert!(REGISTRY.get("ORDER_DETAIL_PAGE").is_some());
         assert!(REGISTRY.get("ORDER_LIST_PAGE").is_some());
         assert!(REGISTRY.get("PRODUCT_DETAIL_PAGE").is_some());
-        assert_eq!(REGISTRY.all().len(), 3);
+        assert!(REGISTRY.get("FLASH_SALE_PAGE").is_some());
+        assert_eq!(REGISTRY.all().len(), 4);
     }
 
     #[test]

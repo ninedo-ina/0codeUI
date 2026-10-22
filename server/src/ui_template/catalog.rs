@@ -5,7 +5,7 @@
 
 use serde_json::Value;
 
-use crate::ui_template::order_detail;
+use crate::ui_template::{flash_sale, order_detail};
 use crate::ui_template::{DeviceInfo, TemplateError};
 
 /// 一个场景模板的定义。
@@ -28,8 +28,16 @@ static ORDER_DETAIL_PAGE: TemplateDefinition = TemplateDefinition {
     build_view: order_detail::build_view,
 };
 
+/// 限时抢购模板（验收场景二）。
+static FLASH_SALE_PAGE: TemplateDefinition = TemplateDefinition {
+    scene_code: "FLASH_SALE_PAGE",
+    template_version: "v1",
+    template: include_str!("../../templates/flash_sale.html"),
+    build_view: flash_sale::build_view,
+};
+
 /// 全部已注册模板。
-static TEMPLATES: &[&TemplateDefinition] = &[&ORDER_DETAIL_PAGE];
+static TEMPLATES: &[&TemplateDefinition] = &[&ORDER_DETAIL_PAGE, &FLASH_SALE_PAGE];
 
 /// 按场景编码查找模板。
 pub fn find(scene_code: &str) -> Option<&'static TemplateDefinition> {

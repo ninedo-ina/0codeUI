@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>{{title}} · InTimeUI</title>
+<style>
+:root {
+  --bg: #f2f2ef;
+  --surface: #ffffff;
+  --surface-2: #e9e9e5;
+  --ink: #101010;
+  --ink-2: #3d3d3a;
+  --muted: #74746e;
+  --line: #d6d6d0;
+  --accent: #111111;
+  --accent-ink: #ffffff;
+  --live: #1d6b47;
+  --live-bg: #e3f0e8;
+  --warn: #8a5a00;
+  --warn-bg: #f6ecd8;
+  --danger: #9b2c2c;
+  --danger-bg: #f6e3e3;
+  --neutral-bg: #e8e8e3;
+  --shadow: 0 1px 0 rgba(17, 17, 17, 0.05), 0 28px 70px -38px rgba(17, 17, 17, 0.5);
+  --radius-lg: 24px;
+  --radius-md: 14px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0f0f;
+    --surface: #191919;
+    --surface-2: #232323;
+    --ink: #f2f2ef;
+    --ink-2: #c9c9c4;
+    --muted: #92928c;
+    --line: #33332f;
+    --accent: #f2f2ef;
+    --accent-ink: #101010;
+    --live: #7cc9a3;
+    --live-bg: #173326;
+    --warn: #e0b15e;
+    --warn-bg: #332a16;
+    --danger: #e08d8d;
+    --danger-bg: #351b1b;
+    --neutral-bg: #262622;
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 30px 70px -36px rgba(0, 0, 0, 0.9);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0f0f;
+  --surface: #191919;
+  --surface-2: #232323;
+  --ink: #f2f2ef;
+  --ink-2: #c9c9c4;
+  --muted: #92928c;
+  --line: #33332f;
+  --accent: #f2f2ef;
+  --accent-ink: #101010;
+  --live: #7cc9a3;
+  --live-bg: #173326;
+  --warn: #e0b15e;
+  --warn-bg: #332a16;
+  --danger: #e08d8d;
+  --danger-bg: #351b1b;
+  --neutral-bg: #262622;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 30px 70px -36px rgba(0, 0, 0, 0.9);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 460px at 10% -12%, rgba(17, 17, 17, 0.08), transparent 68%),
+    radial-gradient(720px 420px at 100% 0%, rgba(17, 17, 17, 0.06), transparent 62%),
+    var(--bg);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5) 0;
+}
+.brand { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 650; letter-spacing: 0.02em; }
+.brand-mark { width: 10px; height: 10px; border-radius: 3px; background: var(--ink); transform: rotate(45deg); }
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+.theme-toggle:hover { transform: translateY(-1px); border-color: var(--ink-2); }
+.theme-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.theme-glyph { font-size: 15px; line-height: 1; }
+.theme-glyph-moon { display: none; }
+:root[data-theme="dark"] .theme-glyph-sun { display: none; }
+:root[data-theme="dark"] .theme-glyph-moon { display: inline; }
+.page { max-width: 760px; margin: 0 auto; padding: var(--space-5); display: grid; gap: var(--space-5); }
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -80px -120px auto;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.hero-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.eyebrow { color: var(--muted); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+.status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-live { color: var(--live); background: var(--live-bg); }
+.status-upcoming { color: var(--warn); background: var(--warn-bg); }
+.status-ended { color: var(--danger); background: var(--danger-bg); }
+.status-neutral { color: var(--muted); background: var(--neutral-bg); }
+.hero-title { position: relative; z-index: 1; margin: var(--space-4) 0 var(--space-2); font-size: clamp(26px, 6vw, 40px); line-height: 1.12; letter-spacing: -0.03em; }
+.hero-sub { position: relative; z-index: 1; margin: 0; color: var(--muted); font-size: 14px; }
+.price-row { position: relative; z-index: 1; display: flex; align-items: baseline; gap: var(--space-3); margin-top: var(--space-5); }
+.price-hero { margin: 0; font-family: var(--font-mono); font-size: clamp(34px, 9vw, 52px); font-weight: 700; letter-spacing: -0.04em; }
+.price-hero .currency { margin-right: 4px; font-size: 20px; font-weight: 600; }
+.original { color: var(--muted); font-family: var(--font-mono); text-decoration: line-through; }
+.discount { padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
+.countdown {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.countdown-label { color: var(--muted); font-size: 13px; }
+.countdown-value { font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: 0.06em; }
+.stock { margin-top: var(--space-5); }
+.stock-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); color: var(--muted); font-size: 13px; }
+.stock-track { height: 10px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
+.stock-fill { height: 100%; width: 100%; border-radius: inherit; background: var(--ink); transform: scaleX(calc({{stock_percent}} / 100)); transform-origin: left center; transition: transform 320ms ease; }
+.cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: 15px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+.cta:hover { transform: translateY(-1px); }
+.cta:active { transform: translateY(0) scale(0.99); }
+.cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.cta[disabled] { cursor: not-allowed; opacity: 0.45; transform: none; }
+.section { padding: var(--space-5); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+.section h2 { margin: 0 0 var(--space-3); font-size: 16px; letter-spacing: -0.01em; }
+.section p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.chip { padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 12px; }
+.mono { font-family: var(--font-mono); }
+.footer { display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: 0 var(--space-5) var(--space-6); color: var(--muted); font-size: 12px; }
+.footer-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 10;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--accent-ink);
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 480px) {
+  .page { padding: var(--space-4); gap: var(--space-4); }
+  .hero { padding: var(--space-5); }
+  .topbar { padding: var(--space-4) var(--space-4) 0; }
+}
+</style>
+</head>
+<body class="{{device_class}}">
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">InTimeUI</span>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题" aria-pressed="false">
+    <span class="theme-glyph theme-glyph-sun" aria-hidden="true">☀</span>
+    <span class="theme-glyph theme-glyph-moon" aria-hidden="true">☾</span>
+  </button>
+</header>
+<main class="page">
+  <section class="hero" style="--delay: 0ms">
+    <div class="hero-top">
+      <span class="eyebrow">限时抢购</span>
+      <span class="status {{status_class}}"><span class="status-dot" aria-hidden="true"></span>{{status_label}}</span>
+    </div>
+    <h1 class="hero-title">{{title}}</h1>
+    <p class="hero-sub">商品编号 <span class="mono">{{product_id}}</span> · 活动编号 <span class="mono">{{sale_id}}</span></p>
+    <div class="price-row">
+      <p class="price-hero"><span class="currency">{{currency_symbol}}</span>{{price}}</p>
+      {{#original_price}}<span class="original">{{currency_symbol}}{{original_price}}</span>{{/original_price}}
+      {{#discount}}<span class="discount">{{discount}}</span>{{/discount}}
+    </div>
+    <div class="countdown">
+      <span class="countdown-label">距结束</span>
+      <span class="countdown-value" id="countdown" data-countdown="{{countdown_seconds}}">{{countdown_label}}</span>
+    </div>
+    <div class="stock">
+      <div class="stock-head"><span>剩余库存</span><span><span class="mono">{{stock_remaining}}</span> / {{stock_total}}</span></div>
+      <div class="stock-track" role="progressbar" aria-valuemin="0" aria-valuemax="{{stock_total}}" aria-valuenow="{{stock_remaining}}"><div class="stock-fill"></div></div>
+    </div>
+    <button class="cta" id="buy-now" type="button" data-demo-action="抢购请求已提交（示例）"{{#cta_disabled}} disabled{{/cta_disabled}}>{{cta_label}}</button>
+  </section>
+  <section class="section" style="--delay: 60ms">
+    <h2>抢购说明</h2>
+    <p>{{description}}</p>
+    <div class="meta">
+      <span class="chip">限量发售</span>
+      <span class="chip">每人限购 1 件</span>
+      <span class="chip">售完即止</span>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <span>由 InTimeUI 实时生成</span>
+  <span class="footer-sep" aria-hidden="true"></span>
+  <span class="mono">模板 v1</span>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  var toast = document.getElementById('toast');
+  var countdown = document.getElementById('countdown');
+  var buy = document.getElementById('buy-now');
+  var timer = null;
+
+  function showToast(message) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('is-visible');
+    window.clearTimeout(timer);
+    timer = window.setTimeout(function () { toast.classList.remove('is-visible'); }, 2200);
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark' || theme === 'light') {
+      root.setAttribute('data-theme', theme);
+      if (toggle) toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    }
+  }
+
+  var saved = null;
+  try { saved = window.localStorage.getItem('intimeui-theme'); } catch (error) { saved = null; }
+  if (saved) applyTheme(saved);
+
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { window.localStorage.setItem('intimeui-theme', next); } catch (error) { /* ignore */ }
+    });
+  }
+
+  if (countdown) {
+    var remaining = Number(countdown.getAttribute('data-countdown') || '0');
+    if (!Number.isFinite(remaining) || remaining < 0) remaining = 0;
+    var tick = function () {
+      var hours = Math.floor(remaining / 3600);
+      var minutes = Math.floor((remaining % 3600) / 60);
+      var seconds = remaining % 60;
+      var pad = function (value) { return String(value).padStart(2, '0'); };
+      countdown.textContent = pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+      if (remaining > 0) {
+        remaining -= 1;
+        window.setTimeout(tick, 1000);
+      }
+    };
+    tick();
+  }
+
+  if (buy) {
+    buy.addEventListener('click', function () {
+      if (buy.disabled) return;
+      showToast(buy.getAttribute('data-demo-action') || '操作已提交（示例）');
+    });
+  }
+})();
+</script>
+</body>
+</html>

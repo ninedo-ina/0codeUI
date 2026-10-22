@@ -11,6 +11,7 @@
 
 pub mod catalog;
 pub mod engine;
+pub mod flash_sale;
 pub mod order_detail;
 
 use std::sync::OnceLock;
@@ -142,6 +143,26 @@ pub fn render_order_detail_scene(
     };
     TemplateEngine::global()
         .render("ORDER_DETAIL_PAGE", ctx.business_data, &device)
+        .map(|page| page.html)
+        .map_err(|error| match error {
+            TemplateError::InvalidBusinessData(message) => {
+                crate::ui::context::SceneError::InvalidBusinessData(message)
+            }
+            other => crate::ui::context::SceneError::Render(other.to_string()),
+        })
+}
+
+/// 适配 REQ-202610-1171 场景注册表：`FLASH_SALE_PAGE` 由本模板引擎渲染。
+pub fn render_flash_sale_scene(
+    ctx: &crate::ui::context::SceneContext<'_>,
+) -> Result<String, crate::ui::context::SceneError> {
+    let device = DeviceInfo {
+        screen_width: ctx.screen_width,
+        screen_height: ctx.screen_height,
+        platform: ctx.platform.to_string(),
+    };
+    TemplateEngine::global()
+        .render("FLASH_SALE_PAGE", ctx.business_data, &device)
         .map(|page| page.html)
         .map_err(|error| match error {
             TemplateError::InvalidBusinessData(message) => {

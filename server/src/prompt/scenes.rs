@@ -10,6 +10,7 @@ pub const BUILTIN_SCENE_CODES: &[&str] = &[
     "ORDER_DETAIL_PAGE",
     "ORDER_LIST_PAGE",
     "PRODUCT_DETAIL_PAGE",
+    "FLASH_SALE_PAGE",
 ];
 
 /// 按场景编码查找内置约束。
@@ -18,6 +19,7 @@ pub fn builtin_scene_constraints(scene_code: &str) -> Option<SceneConstraints> {
         "ORDER_DETAIL_PAGE" => Some(order_detail_page()),
         "ORDER_LIST_PAGE" => Some(order_list_page()),
         "PRODUCT_DETAIL_PAGE" => Some(product_detail_page()),
+        "FLASH_SALE_PAGE" => Some(flash_sale_page()),
         _ => None,
     }
 }
@@ -76,6 +78,30 @@ fn product_detail_page() -> SceneConstraints {
             "虚构库存或价格".to_string(),
         ],
         layout_notes: vec!["价格与库存状态使用语义化强调".to_string()],
+    }
+}
+
+fn flash_sale_page() -> SceneConstraints {
+    SceneConstraints {
+        scene_code: "FLASH_SALE_PAGE".to_string(),
+        display_name: "限时抢购页".to_string(),
+        required_elements: vec![
+            "活动标题".to_string(),
+            "抢购价与原价".to_string(),
+            "倒计时".to_string(),
+            "剩余库存".to_string(),
+            "抢购按钮".to_string(),
+        ],
+        allowed_actions: vec!["立即抢购".to_string()],
+        forbidden: vec![
+            "外部脚本、样式、字体或图片".to_string(),
+            "虚构库存或价格".to_string(),
+            "自动提交订单".to_string(),
+        ],
+        layout_notes: vec![
+            "价格与倒计时是视觉焦点，库存进度条紧随其后".to_string(),
+            "售罄或活动结束时按钮必须禁用并给出明确文案".to_string(),
+        ],
     }
 }
 

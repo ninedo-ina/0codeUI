@@ -40,7 +40,7 @@
 │   │       ├── intimeui-validate.rs # 单文件 HTML 校验 CLI
 │   │       └── intimeui-model-bench.rs # 模型延迟 / 成本基线 CLI
 │   ├── templates/              # 单文件 HTML 模板（编译期内嵌）
-│   └── tests/                  # 集成测试（api / data_model / ui_generate / template_engine / ui_render_api / model_api / html_validator / validate_cli / profile_engine / user_profile / prompt_assembler / intent / replay / telemetry）
+│   └── tests/                  # 集成测试（api / data_model / ui_generate / template_engine / ui_render_api / model_api / html_validator / validate_cli / profile_engine / user_profile / prompt_assembler / intent / replay / telemetry / output_obfuscation / pipeline_api / e2e_acceptance）
 ├── docs/                       # 技术方案、模型推理部署与延迟基线文档
 ├── .github/workflows/ci.yml    # CI：fmt + clippy + build + test
 ├── deploy/                     # 部署参考（systemd 单元 / 模型推理 compose）
@@ -62,7 +62,7 @@
   - 埋点采集：单条 / 批量事件上报、字段校验、按用户防刷配额、用户维度明细与聚合查询（REQ-202610-1174）。
   - API 防重放签名（M5）：动态令牌 + Nonce + 时间窗 + HMAC-SHA256 + SQLite 去重，覆盖 UI 生成 / 意图执行 / 埋点上报三条写接口（REQ-202610-1186，详见 [`docs/replay-protection.md`](docs/replay-protection.md)）。
   - 意图理解与 Tool Call Agent（M3）：自然语言 → JSON Schema 决策树 → 函数调用序列，支持上下文指代消歧、多意图排序、非法输出拦截与澄清追问（详见 [`docs/intent-tool-call-agent.md`](docs/intent-tool-call-agent.md)）。
-  - UI 生成（M1 第一阶段）：`POST /api/v1/ui/generate`，场景注册表（首批 3 个模板场景）与单文件 HTML 渲染。
+  - UI 生成（M1 第一阶段）：`POST /api/v1/ui/generate`，场景注册表（首批 4 个模板场景，含 `FLASH_SALE_PAGE`）与单文件 HTML 渲染。
   - 静态模板引擎：模板库 + Data Payload 填充（默认 HTML 转义）+ 内联交互绑定，`POST /api/v1/ui/render` 输出单文件 HTML，P95 远低于 200ms；同时作为动态生成管线的兜底通道。
   - **UI 生成模型接入（REQ-202610-1181）**：OpenAI 兼容 provider（vLLM / Ollama / DeepSeek）、
     并发信号量 + 有界排队、超时 / 重试 / 备用模型、多模型灰度、SSE 流式输出、
@@ -396,7 +396,7 @@ curl -s 'http://127.0.0.1:8080/api/v1/telemetry/aggregate?user_id=u100' \
 ```
 
 - `version` 由 `<strategy>:<scene_code>:<template_version>` 组成，渲染策略与模板版本可追溯；
-- 首批场景：`ORDER_DETAIL_PAGE`、`ORDER_LIST_PAGE`、`PRODUCT_DETAIL_PAGE`（均为 `template` / `v1`）；
+- 首批场景：`ORDER_DETAIL_PAGE`、`ORDER_LIST_PAGE`、`PRODUCT_DETAIL_PAGE`、`FLASH_SALE_PAGE`（均为 `template` / `v1`）；
 - 未知 `scene_code` 返回 `40410` 并列出可用场景；请求体 / 业务数据非法返回 `40000`；
 - 生产模式请求 `user_id` 必须与认证用户一致，否则返回 `40300`；
 - 输出为完整单文件 HTML：内联 CSS/JS、CSP 限制、无外部资源、业务字段全部 HTML 转义。
@@ -405,7 +405,7 @@ curl -s 'http://127.0.0.1:8080/api/v1/telemetry/aggregate?user_id=u100' \
 新增场景需同步补充场景契约、模板与 `server/tests/ui_generate.rs` 契约测试。
 ### 静态模板引擎与兜底渲染（M1 · REQ-202610-1172）
 
-- **模板库**：`server/templates/*.html` 编译期内嵌；首批 `ORDER_DETAIL_PAGE`（订单详情，兼容 PRD §5.1 `business_data`）。
+- **模板库**：`server/templates/*.html` 编译期内嵌；首批 `ORDER_DETAIL_PAGE`（订单详情，兼容 PRD §5.1 `business_data`）与 `FLASH_SALE_PAGE`（限时抢购，兼作动态管线兜底）。
 - **填充引擎**：`{{path}}` 插值、`{{#items}}` 迭代、`{{^items}}` 反向区块；所有插值默认 HTML 转义。
 - **内联交互**：模板内 `button.onclick` 直接 `fetch` 后端业务接口（如刷新订单状态），不嵌入任何凭据。
 - **接口**：`POST /api/v1/ui/render`，请求 `{scene_code, business_data, device_info?}`，返回 `{html, strategy, template_version, render_ms}`。
@@ -500,6 +500,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features
 cargo test -p intimeui-server --test prompt_assembler   # Prompt 拼装器专项
+cargo test -p intimeui-server --test e2e_acceptance     # 端到端验收（场景 / 性能 / 降级 / 安全）
 cargo build --release
 
 # 模型延迟 / 成本基线（mock 无需 GPU；真实模型先按部署文档启动 vLLM）
@@ -556,4 +557,5 @@ docker exec intimeui-server intimeui-seed
 - **M3 意图引擎**：REQ-202610-1180 意图理解与 Tool Call Agent（已交付）
 - **M4 动态生成**：待排期
 - **M5 安全**：REQ-202610-1186 API 防重放签名（已交付）
-- **M6 训练线 / M7 客户端与验收**：待排期
+- **M6 训练线**：待排期
+- **M7 客户端与验收**：REQ-202610-1190 端到端场景验收与性能 / 降级演练（已交付，见 [`docs/acceptance-report-req-1190.md`](docs/acceptance-report-req-1190.md)）

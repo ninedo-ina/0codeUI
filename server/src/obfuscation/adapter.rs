@@ -9,7 +9,6 @@ use crate::obfuscation::{ObfuscationConfig, ObfuscationEngine};
 use crate::pipeline::obfuscation::{HtmlObfuscator, ObfuscationOutput};
 
 /// 基于进程内混淆引擎的管线混淆器。
-#[derive(Debug)]
 pub struct EngineObfuscator {
     engine: Arc<ObfuscationEngine>,
     config: ObfuscationConfig,
@@ -23,11 +22,7 @@ impl EngineObfuscator {
 }
 
 impl HtmlObfuscator for EngineObfuscator {
-    fn obfuscate(
-        &self,
-        html: &str,
-        session_id: Option<&str>,
-    ) -> Result<ObfuscationOutput, String> {
+    fn obfuscate(&self, html: &str, session_id: Option<&str>) -> Result<ObfuscationOutput, String> {
         let result = self
             .engine
             .obfuscate(html, &self.config, session_id)
