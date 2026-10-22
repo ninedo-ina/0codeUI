@@ -1,0 +1,48 @@
+# InTimeUI LoRA 叠加层（与 docker-compose.yml 一起使用）
+#
+# 启动：
+#   docker compose \
+#     -f deploy/model/docker-compose.yml \
+#     -f deploy/model/docker-compose.lora.yml \
+#     up -d
+#
+# 前置条件：
+#   1. 适配器已安装到 deploy/model/adapters/<name>/
+#   2. adapter_manifest.json 通过 export_adapter.py --verify-only
+#   3. 适配器基座与 MODEL_ID 一致（或至少同 tokenizer / 同架构）
+#
+# 注意：LoRA 名称必须与 intimeui-server 的 MODEL_NAME 完全一致；
+# 回滚时把 MODEL_NAME 改回基础模型即可，无需重启 vLLM。
+
+services:
+  model:
+    environment:
+      VLLM_ALLOW_RUNTIME_LORA_UPDATING: "1"
+    volumes:
+      - ./adapters:/adapters:ro
+    command:
+      - --model
+      - ${MODEL_ID:-Qwen/Qwen2.5-Coder-7B-Instruct-AWQ}
+      - --served-model-name
+      - ${SERVED_MODEL_NAME:-Qwen2.5-Coder-7B-Instruct-AWQ}
+      - --quantization
+      - ${QUANTIZATION:-awq}
+      - --dtype
+      - half
+      - --max-model-len
+      - "8192"
+      - --gpu-memory-utilization
+      - "0.90"
+      - --max-num-seqs
+      - "8"
+      - --enable-prefix-caching
+      - --enable-lora
+      - --lora-modules
+      - ${LORA_MODULE_NAME:-qwen2.5-coder-7b-ui-lora}=/adapters/${LORA_ADAPTER_DIR:-qwen2.5-coder-7b-ui-lora}
+      - --max-lora-rank
+      - "32"
+      - --disable-log-requests
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"

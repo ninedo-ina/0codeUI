@@ -1,0 +1,185 @@
+[
+  {
+    "id": "order-detail-light-001",
+    "scene_code": "ORDER_DETAIL_PAGE",
+    "instruction": "生成一个订单详情页，浅色主题，信息密度适中，金额右对齐，支持明暗切换。",
+    "style": {"theme": "light", "density": 0.5, "font_scale": 1.0, "radius": 12.0, "spacing": 1.0},
+    "business_data": {
+      "order_id": "ORD_20261014_001",
+      "status": "PAID",
+      "items": [{"name": "智能降噪耳机", "price": 299.0, "qty": 1}]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-detail-dark-002",
+    "scene_code": "ORDER_DETAIL_PAGE",
+    "instruction": "生成深色订单详情页，突出订单状态和商品明细，适合移动端查看。",
+    "style": {"theme": "dark", "density": 0.4, "font_scale": 1.05, "radius": 16.0, "spacing": 1.1},
+    "business_data": {
+      "order_id": "ORD_20261015_002",
+      "status": "SHIPPED",
+      "items": [
+        {"name": "机械键盘", "price": 499.0, "qty": 1},
+        {"name": "无线鼠标", "price": 129.0, "qty": 2}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-detail-light-003",
+    "scene_code": "ORDER_DETAIL_PAGE",
+    "instruction": "生成紧凑排版的订单详情页，浅色主题，显示待支付状态与商品合计。",
+    "style": {"theme": "light", "density": 0.2, "font_scale": 0.95, "radius": 8.0, "spacing": 0.9},
+    "business_data": {
+      "order_id": "ORD_20261016_003",
+      "status": "PENDING",
+      "items": [
+        {"name": "27 英寸显示器", "price": 1299.0, "qty": 1},
+        {"name": "显示器支架", "price": 199.0, "qty": 1}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-detail-dark-004",
+    "scene_code": "ORDER_DETAIL_PAGE",
+    "instruction": "生成宽松排版的深色订单详情页，展示已完成订单和金额合计。",
+    "style": {"theme": "dark", "density": 0.8, "font_scale": 1.15, "radius": 20.0, "spacing": 1.2},
+    "business_data": {
+      "order_id": "ORD_20261017_004",
+      "status": "COMPLETED",
+      "items": [
+        {"name": "智能降噪耳机", "price": 299.0, "qty": 2},
+        {"name": "机械键盘", "price": 499.0, "qty": 1}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-list-light-001",
+    "scene_code": "ORDER_LIST_PAGE",
+    "instruction": "生成订单列表页，浅色主题，展示三笔订单的状态和金额。",
+    "style": {"theme": "light", "density": 0.5, "font_scale": 1.0, "radius": 12.0, "spacing": 1.0},
+    "business_data": {
+      "orders": [
+        {"order_id": "ORD_20261014_001", "status": "PAID", "total": 299.0, "item_count": 1, "created_at": "2026-10-14"},
+        {"order_id": "ORD_20261015_002", "status": "SHIPPED", "total": 757.0, "item_count": 3, "created_at": "2026-10-15"},
+        {"order_id": "ORD_20261016_003", "status": "PENDING", "total": 1498.0, "item_count": 2, "created_at": "2026-10-16"}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-list-dark-002",
+    "scene_code": "ORDER_LIST_PAGE",
+    "instruction": "生成深色订单列表页，按时间倒序展示订单号和状态标签。",
+    "style": {"theme": "dark", "density": 0.4, "font_scale": 1.05, "radius": 16.0, "spacing": 1.1},
+    "business_data": {
+      "orders": [
+        {"order_id": "ORD_20261017_004", "status": "COMPLETED", "total": 1097.0, "item_count": 3, "created_at": "2026-10-17"},
+        {"order_id": "ORD_20261016_003", "status": "PENDING", "total": 1498.0, "item_count": 2, "created_at": "2026-10-16"}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-list-light-003",
+    "scene_code": "ORDER_LIST_PAGE",
+    "instruction": "生成紧凑的订单列表页，浅色主题，突出金额与订单状态。",
+    "style": {"theme": "light", "density": 0.2, "font_scale": 0.9, "radius": 8.0, "spacing": 0.85},
+    "business_data": {
+      "orders": [
+        {"order_id": "ORD_20261014_001", "status": "PAID", "total": 299.0, "item_count": 1, "created_at": "2026-10-14"},
+        {"order_id": "ORD_20261015_002", "status": "SHIPPED", "total": 757.0, "item_count": 3, "created_at": "2026-10-15"},
+        {"order_id": "ORD_20261016_003", "status": "PENDING", "total": 1498.0, "item_count": 2, "created_at": "2026-10-16"},
+        {"order_id": "ORD_20261017_004", "status": "COMPLETED", "total": 1097.0, "item_count": 3, "created_at": "2026-10-17"}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "order-list-dark-004",
+    "scene_code": "ORDER_LIST_PAGE",
+    "instruction": "生成宽松排版的深色订单列表页，单笔订单也要保持完整空态结构。",
+    "style": {"theme": "dark", "density": 0.8, "font_scale": 1.1, "radius": 20.0, "spacing": 1.2},
+    "business_data": {
+      "orders": [
+        {"order_id": "ORD_20261014_001", "status": "PAID", "total": 299.0, "item_count": 1, "created_at": "2026-10-14"}
+      ]
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "product-detail-light-001",
+    "scene_code": "PRODUCT_DETAIL_PAGE",
+    "instruction": "生成商品详情页，浅色主题，突出商品名称、价格和加入购物车按钮。",
+    "style": {"theme": "light", "density": 0.5, "font_scale": 1.0, "radius": 16.0, "spacing": 1.0},
+    "business_data": {
+      "product_id": "PROD_20261014_001",
+      "name": "智能降噪耳机",
+      "price": 299.0,
+      "description": "主动降噪，40 小时续航，支持多设备切换。",
+      "stock": "现货",
+      "shipping": "48 小时内"
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "product-detail-dark-002",
+    "scene_code": "PRODUCT_DETAIL_PAGE",
+    "instruction": "生成深色商品详情页，信息层级清晰，价格使用等宽数字。",
+    "style": {"theme": "dark", "density": 0.4, "font_scale": 1.05, "radius": 18.0, "spacing": 1.1},
+    "business_data": {
+      "product_id": "PROD_20261014_002",
+      "name": "机械键盘",
+      "price": 499.0,
+      "description": "87 键热插拔轴体，PBT 键帽，支持三模连接。",
+      "stock": "现货",
+      "shipping": "48 小时内"
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "product-detail-light-003",
+    "scene_code": "PRODUCT_DETAIL_PAGE",
+    "instruction": "生成紧凑的商品详情页，浅色主题，展示商品编号与库存信息。",
+    "style": {"theme": "light", "density": 0.25, "font_scale": 0.95, "radius": 10.0, "spacing": 0.9},
+    "business_data": {
+      "product_id": "PROD_20261014_003",
+      "name": "27 英寸显示器",
+      "price": 1299.0,
+      "description": "2K 分辨率，75Hz 刷新率，支持 Type-C 一线连接。",
+      "stock": "少量现货",
+      "shipping": "72 小时内"
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  },
+  {
+    "id": "product-detail-dark-004",
+    "scene_code": "PRODUCT_DETAIL_PAGE",
+    "instruction": "生成宽松排版的深色商品详情页，突出价格和购买按钮的 hover 状态。",
+    "style": {"theme": "dark", "density": 0.85, "font_scale": 1.15, "radius": 22.0, "spacing": 1.25},
+    "business_data": {
+      "product_id": "PROD_20261014_004",
+      "name": "无线鼠标",
+      "price": 129.0,
+      "description": "轻量化设计，双模连接，续航 70 天。",
+      "stock": "现货",
+      "shipping": "24 小时内"
+    },
+    "license": "CC-BY-4.0",
+    "source": "seed"
+  }
+]

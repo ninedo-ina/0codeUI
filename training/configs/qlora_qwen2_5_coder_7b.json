@@ -1,0 +1,49 @@
+{
+  "base_model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "method": "qlora",
+  "quantization": {
+    "load_in_4bit": true,
+    "bnb_4bit_quant_type": "nf4",
+    "bnb_4bit_compute_dtype": "bfloat16",
+    "bnb_4bit_use_double_quant": true
+  },
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "bias": "none",
+    "task_type": "CAUSAL_LM"
+  },
+  "training": {
+    "num_train_epochs": 3,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "learning_rate": 0.0002,
+    "max_seq_length": 4096,
+    "bf16": true,
+    "gradient_checkpointing": true,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.03,
+    "logging_steps": 5,
+    "save_steps": 100,
+    "save_total_limit": 2,
+    "optim": "paged_adamw_8bit",
+    "seed": 42
+  },
+  "vram_budget_gb": 24,
+  "estimated_vram_gb": 21.5,
+  "notes": [
+    "24GB 单卡默认配置：4-bit NF4 量化基座 + bf16 计算 + gradient checkpointing。",
+    "若显存不足，优先把 max_seq_length 降到 3072，再降 r 到 8；不要先减 batch（保持 1）。",
+    "训练基座为 bf16 权重仓库；推理侧可继续使用 AWQ 量化基座加载同一适配器。"
+  ]
+}

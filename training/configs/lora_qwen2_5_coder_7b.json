@@ -1,0 +1,40 @@
+{
+  "base_model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "method": "lora",
+  "lora": {
+    "r": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "bias": "none",
+    "task_type": "CAUSAL_LM"
+  },
+  "training": {
+    "num_train_epochs": 3,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 16,
+    "learning_rate": 0.0002,
+    "max_seq_length": 2048,
+    "bf16": true,
+    "gradient_checkpointing": true,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.03,
+    "logging_steps": 5,
+    "save_steps": 100,
+    "save_total_limit": 2,
+    "optim": "adamw_torch",
+    "seed": 42
+  },
+  "vram_budget_gb": 24,
+  "estimated_vram_gb": 22.5,
+  "notes": [
+    "非量化 LoRA 仅建议在 24GB 卡上以 max_seq_length 2048、r 8 运行；长样本会被截断。",
+    "需要完整 4096 上下文时请使用 qlora_qwen2_5_coder_7b.json。",
+    "该配置是 QLoRA 不可用（如 bitsandbytes 安装失败）时的回退方案。"
+  ]
+}

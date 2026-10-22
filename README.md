@@ -29,8 +29,15 @@
 │   │   ├── bin/intimeui-seed.rs # 种子数据一键加载 CLI
 │   │   └── bin/intimeui-model-bench.rs # 模型延迟 / 成本基线 CLI
 │   └── tests/                  # 集成测试（api.rs / data_model.rs / model_api.rs）
-├── docs/                       # 模型推理部署与延迟基线文档
-├── .github/workflows/ci.yml    # CI：fmt + clippy + build + test
+├── docs/                       # 模型推理部署、LoRA 微调与延迟基线文档
+├── training/                   # M6 训练线：语料 / LoRA·QLoRA / 评测 / 适配器导出
+│   ├── configs/                # 24GB 显存训练配置
+│   ├── corpus/                 # 语料 schema、模板与种子样本
+│   ├── eval/                   # 留出评测集
+│   ├── intimeui_training/      # 纯标准库核心包
+│   ├── scripts/                # prepare / train / evaluate / export / smoke
+│   └── tests/                  # 无 GPU unittest
+├── .github/workflows/ci.yml    # CI：fmt + clippy + build + test + 训练线测试
 ├── deploy/                     # 部署参考（systemd 单元 / 模型推理 compose）
 ├── Dockerfile
 └── .env.example                # 环境变量样例（不含任何真实密钥）
@@ -49,7 +56,10 @@
   - 原子能力数据层：`create_order` / `query_user_balance` / `update_item_status` / `delete_record`（含审计记录）；
   - **UI 生成模型接入（REQ-202610-1181）**：OpenAI 兼容 provider（vLLM / Ollama / DeepSeek）、
     并发信号量 + 有界排队、超时 / 重试 / 备用模型、多模型灰度、SSE 流式输出、
-    单文件 HTML 安全校验、延迟分位与 token / 成本指标。
+    单文件 HTML 安全校验、延迟分位与 token / 成本指标；
+  - **UI 语料与 LoRA/QLoRA 微调管线（REQ-202610-1187）**：语料采集 / 清洗 / PII 脱敏 /
+    去重 / 确定性切分、24GB 单卡 LoRA·QLoRA 训练、五项质量指标评测、
+    PEFT 适配器清单与 vLLM 热加载。
 
 ### 快速开始（本地）
 
@@ -88,6 +98,10 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/ui/model/generate \
   -H 'Authorization: Bearer dev:1001' \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"生成一个订单详情页，黑白灰主题，支持明暗切换"}'
+
+# 9. 训练线自检（无 GPU；真实 24GB 训练见 docs/lora-finetuning.md）
+python3 -m unittest discover -s training/tests -t training -v
+python3 training/scripts/smoke_pipeline.py
 ```
 
 ### 环境变量
@@ -110,7 +124,7 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/ui/model/generate \
 | `MODEL_PROVIDER` | `mock` | `mock`（仅 dev / test）或 `openai_compatible`（vLLM / Ollama / DeepSeek） |
 | `MODEL_BASE_URL` | `http://127.0.0.1:8000/v1` | OpenAI 兼容服务地址（不含 `/chat/completions`） |
 | `MODEL_API_KEY` | 空 | 服务端密钥；本机 vLLM 可留空 |
-| `MODEL_NAME` | `Qwen2.5-Coder-7B-Instruct-AWQ` | 主模型 |
+| `MODEL_NAME` | `Qwen2.5-Coder-7B-Instruct-AWQ` | 主模型；加载 LoRA 后改为适配器 served name（见 `docs/lora-finetuning.md`） |
 | `MODEL_FALLBACKS` | 空 | 备用模型链（逗号分隔） |
 | `MODEL_CANARY_MODEL` / `MODEL_CANARY_PERCENT` | 空 / `0` | 灰度模型与流量百分比（0–100） |
 | `MODEL_REQUEST_TIMEOUT_MS` | `1500` | 非流式请求总超时 |
@@ -203,17 +217,26 @@ cargo build --release
 # 模型延迟 / 成本基线（mock 无需 GPU；真实模型先按部署文档启动 vLLM）
 cargo run --release -p intimeui-server --bin intimeui-model-bench -- \
   --requests 100 --concurrency 4 --output /tmp/model-bench.json
+
+# 训练线：单元测试 + 无 GPU 全链路自检
+python3 -m unittest discover -s training/tests -t training -v
+python3 training/scripts/smoke_pipeline.py
 ```
 
 ### CI
 
-`.github/workflows/ci.yml`：push / PR 触发，执行 fmt 检查、clippy（`-D warnings`）、构建与测试。
+`.github/workflows/ci.yml`：push / PR 触发，执行 fmt 检查、clippy（`-D warnings`）、
+Rust 构建与测试，以及训练线 Python unittest + mock 全链路自检。
 
 ### 部署
 
 **模型推理（24GB 显存，vLLM）**：见 [`docs/model-inference-deployment.md`](docs/model-inference-deployment.md)，
 参考 compose 位于 [`deploy/model/docker-compose.yml`](deploy/model/docker-compose.yml)；
 延迟 / 成本基线见 [`docs/model-latency-baseline.md`](docs/model-latency-baseline.md)。
+
+**LoRA 适配器（M6）**：训练、评测、导出与热加载见
+[`docs/lora-finetuning.md`](docs/lora-finetuning.md)；带 LoRA 的 vLLM 叠加层为
+[`deploy/model/docker-compose.lora.yml`](deploy/model/docker-compose.lora.yml)。
 
 **方式一：systemd（裸机 / VPS）**
 
@@ -247,5 +270,6 @@ docker exec intimeui-server intimeui-seed
 
 ## 路线图（对应 REQ-202610-1168 拆解）
 
-- **M0 基础工程**：REQ-202610-1169 服务基座（已交付）、REQ-202610-1170 数据模型与种子数据（本批交付）
-- M1 模板兜底链路 / M2 埋点画像 / M3 意图引擎 / M4 动态生成 / M5 安全 / M6 训练线 / M7 客户端与验收
+- **M0 基础工程**：REQ-202610-1169 服务基座（已交付）、REQ-202610-1170 数据模型与种子数据（已交付）
+- **M6 训练线**：REQ-202610-1187 UI 语料与 LoRA/QLoRA 微调管线（本批交付；真实 24GB 训练待目标机回填）
+- M1 模板兜底链路 / M2 埋点画像 / M3 意图引擎 / M4 动态生成 / M5 安全 / M7 客户端与验收

@@ -118,6 +118,45 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/ui/model/generate \
   -d '{"prompt":"生成一个订单详情页，黑白灰主题，支持明暗切换"}'
 ```
 
+### 3.4 加载 LoRA 适配器（M6）
+
+训练线产出的 PEFT 适配器通过 `deploy/model/docker-compose.lora.yml` 叠加加载；
+完整训练 / 评测 / 导出流程见 [`docs/lora-finetuning.md`](lora-finetuning.md)。
+
+```bash
+# 1. 校验并安装适配器（训练产物目录 -> deploy/model/adapters/<name>）
+python3 training/scripts/export_adapter.py \
+  --adapter-dir training/artifacts/qwen2.5-coder-7b-ui-lora \
+  --served-name qwen2.5-coder-7b-ui-lora \
+  --eval-report training/artifacts/eval/adapter/eval_report.json \
+  --install-dir deploy/model/adapters \
+  --print-vllm
+
+# 2. 基础 compose + LoRA 叠加层
+docker compose \
+  -f deploy/model/docker-compose.yml \
+  -f deploy/model/docker-compose.lora.yml \
+  up -d
+
+# 3. 确认基础模型与适配器同时出现在 /v1/models
+curl -s http://127.0.0.1:8000/v1/models | jq '.data[].id'
+```
+
+接入后端时把 `MODEL_NAME` 改为适配器的 `served_model_name`：
+
+```bash
+export MODEL_PROVIDER=openai_compatible
+export MODEL_BASE_URL=http://127.0.0.1:8000/v1
+export MODEL_NAME=qwen2.5-coder-7b-ui-lora
+```
+
+回滚只需把 `MODEL_NAME` 改回基础模型；若开启
+`VLLM_ALLOW_RUNTIME_LORA_UPDATING=1`，也可通过 `/v1/load_lora_adapter` 与
+`/v1/unload_lora_adapter` 在线切换版本（命令见 `docs/lora-finetuning.md` §7.4）。
+
+> 适配器基座必须与 `MODEL_ID` 同架构 / 同 tokenizer；训练用 bf16 基座、
+> 推理用 AWQ 量化基座时，LoRA 权重仍可加载，但需在目标机实测输出一致性。
+
 ## 4. 接口与行为
 
 | 方法 | 路径 | 说明 |
@@ -248,6 +287,8 @@ cargo run --release -p intimeui-server --bin intimeui-model-bench -- \
 | 输出被拒绝 | 模型未按单文件 HTML 输出；检查系统提示词与模型能力，必要时换更大模型 |
 | 流式无输出 | 反向代理关闭缓冲（Nginx `proxy_buffering off`），确认 SSE 不被压缩 |
 | 显存 OOM | 降低 `--gpu-memory-utilization`、`--max-model-len`、`--max-num-seqs`，或换更小量化 |
+| 适配器 404 / 未加载 | 检查 `/adapters/<name>` 挂载、`--lora-modules` 左侧名称与 `MODEL_NAME` 是否一致 |
+| 适配器加载后 OOM | 降低 `--max-model-len` / `--max-num-seqs`；LoRA 会额外占用少量显存 |
 
 ### 6.1 安全边界
 
@@ -266,7 +307,9 @@ cargo run --release -p intimeui-server --bin intimeui-model-bench -- \
 - [ ] `GET /api/v1/ui/model/info` 显示 `provider=openai_compatible`
 - [ ] `POST /api/v1/ui/model/generate` 返回合法单文件 HTML
 - [ ] `intimeui-model-bench` 三组场景跑完，结果写入 `docs/model-latency-baseline.md`
-- [ ] 记录镜像 tag / digest、模型 revision、驱动版本、vLLM 参数与 GPU 型号
+- [ ] （可选 M6）LoRA 适配器 `export_adapter.py --verify-only` 通过
+- [ ] （可选 M6）`/v1/models` 同时列出基础模型与适配器，`MODEL_NAME` 指向适配器
+- [ ] 记录镜像 tag / digest、模型 revision、适配器 SHA-256、驱动版本、vLLM 参数与 GPU 型号
 
 > 本仓库 CI 环境无 GPU，默认使用 mock provider 验证完整链路；真实 24GB 基线需按上述
 > 清单在目标机器执行并回填。mock 结果不能当作真实模型性能数据。

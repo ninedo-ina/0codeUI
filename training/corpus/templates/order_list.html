@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="$THEME">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>订单列表 · InTimeUI</title>
+  <style>
+    :root {
+      --bg: #f7f7f7;
+      --surface: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #d9d9d9;
+      --chip: #efefef;
+      --radius: 12px;
+      --space: 14px;
+    }
+    [data-theme="dark"] {
+      --bg: #0d0d0d;
+      --surface: #171717;
+      --text: #f5f5f5;
+      --muted: #a3a3a3;
+      --border: #333333;
+      --chip: #242424;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, "PingFang SC", sans-serif; }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 5;
+    }
+    .brand { font-weight: 700; }
+    .theme-toggle {
+      border: 1px solid var(--border); background: var(--chip); color: var(--text);
+      border-radius: 999px; padding: 7px 13px; cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); opacity: 0.85; }
+    .theme-toggle:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .theme-toggle:active { transform: scale(0.98); }
+    main { max-width: 820px; margin: 0 auto; padding: 26px 18px 44px; }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    .hint { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+    ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    li.order {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; display: flex; justify-content: space-between; gap: 14px; align-items: center;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    li.order:hover { transform: translateY(-2px); opacity: 0.94; }
+    li.order:focus-within { outline: 2px solid var(--text); outline-offset: 2px; }
+    .meta-label { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .order-main, .order-side { display: grid; gap: 2px; }
+    .order-side { justify-items: end; }
+    .order-id { font-weight: 650; }
+    .order-meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .chip { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+    .amount { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); }
+    footer { max-width: 820px; margin: 0 auto; padding: 0 18px 30px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 560px) {
+      li.order { flex-direction: column; align-items: flex-start; }
+      .order-side { justify-items: start; }
+      main { padding: 20px 12px 36px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">InTimeUI · 我的订单</span>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题">切换主题</button>
+  </header>
+  <main>
+    <h1>订单列表</h1>
+    <p class="hint">共 $ORDER_COUNT 笔订单，按最近更新时间排序</p>
+    <ul>
+      $ORDER_ROWS
+    </ul>
+    <p class="empty" hidden>暂无订单</p>
+  </main>
+  <footer>页面由 InTimeUI 生成 · 数据仅用于当前会话</footer>
+  <script>
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+      var root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
+  </script>
+</body>
+</html>

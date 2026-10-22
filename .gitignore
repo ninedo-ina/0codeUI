@@ -11,3 +11,12 @@
 *.db
 *.db-shm
 *.db-wal
+
+# 训练产物（适配器权重、评测报告、切分数据）与 Python 缓存
+/training/artifacts/*
+!/training/artifacts/.gitkeep
+/training/data/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv-training/

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="$THEME">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>商品详情 · InTimeUI</title>
+  <style>
+    :root {
+      --bg: #f7f7f7;
+      --surface: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #d9d9d9;
+      --chip: #efefef;
+      --radius: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #0d0d0d;
+      --surface: #171717;
+      --text: #f5f5f5;
+      --muted: #a3a3a3;
+      --border: #333333;
+      --chip: #242424;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, "PingFang SC", sans-serif; }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .brand { font-weight: 700; }
+    .theme-toggle {
+      border: 1px solid var(--border); background: var(--chip); color: var(--text);
+      border-radius: 999px; padding: 7px 13px; cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); opacity: 0.85; }
+    .theme-toggle:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .theme-toggle:active { transform: scale(0.98); }
+    main { max-width: 900px; margin: 0 auto; padding: 28px 20px 48px; }
+    .product { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
+    .hero {
+      min-height: 260px; border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); display: grid; place-items: center; font-size: 64px; color: var(--muted);
+    }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: -0.01em; }
+    .price { font-size: 30px; font-weight: 750; margin: 12px 0 4px; font-variant-numeric: tabular-nums; }
+    .desc { color: var(--muted); margin: 14px 0 22px; }
+    .button {
+      width: 100%; border: 1px solid var(--text); background: var(--text); color: var(--bg);
+      border-radius: 10px; padding: 12px 16px; font-size: 15px; cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .button:hover { transform: translateY(-1px); opacity: 0.88; }
+    .button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .button:active { transform: scale(0.98); }
+    .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+    .fact { background: var(--chip); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .fact b { display: block; font-size: 14px; }
+    .fact span { color: var(--muted); font-size: 12px; }
+    footer { max-width: 900px; margin: 0 auto; padding: 0 20px 30px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 700px) {
+      .product { grid-template-columns: 1fr; }
+      main { padding: 20px 14px 36px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">InTimeUI · 商品</span>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题">切换主题</button>
+  </header>
+  <main>
+    <section class="product">
+      <div class="hero" aria-hidden="true">◻</div>
+      <div class="panel">
+        <h1>$PRODUCT_NAME</h1>
+        <div class="price">$PRICE</div>
+        <p class="desc">$DESCRIPTION</p>
+        <button class="button" type="button" onclick="alert('已加入购物车')">加入购物车</button>
+        <div class="facts">
+          <div class="fact"><b>库存</b><span>$STOCK</span></div>
+          <div class="fact"><b>发货</b><span>$SHIPPING</span></div>
+          <div class="fact"><b>保障</b><span>七天无理由</span></div>
+          <div class="fact"><b>商品编号</b><span>$PRODUCT_ID</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>页面由 InTimeUI 生成 · 数据仅用于当前会话</footer>
+  <script>
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+      var root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://intimeui.local/schemas/ui-corpus-sample.json",
+  "title": "InTimeUI UI 语料样本",
+  "description": "一行一个 JSON 对象（JSONL）。清洗脚本会额外检查 HTML 结构、单文件约束、PII 与重复样本。",
+  "type": "object",
+  "required": [
+    "id",
+    "scene_code",
+    "instruction",
+    "style",
+    "business_data",
+    "output_html",
+    "license",
+    "source"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$",
+      "description": "样本唯一标识，同一批语料内不可重复"
+    },
+    "scene_code": {
+      "type": "string",
+      "enum": ["ORDER_DETAIL_PAGE", "ORDER_LIST_PAGE", "PRODUCT_DETAIL_PAGE"]
+    },
+    "instruction": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 2000
+    },
+    "style": {
+      "type": "object",
+      "required": ["theme", "density", "font_scale", "radius", "spacing"],
+      "properties": {
+        "theme": {"type": "string", "enum": ["light", "dark"]},
+        "density": {"type": "number", "minimum": 0, "maximum": 1},
+        "font_scale": {"type": "number", "minimum": 0.8, "maximum": 1.4},
+        "radius": {"type": "number", "minimum": 0, "maximum": 24},
+        "spacing": {"type": "number", "minimum": 0.75, "maximum": 1.5}
+      },
+      "additionalProperties": true
+    },
+    "business_data": {
+      "type": "object",
+      "description": "场景业务数据；序列化后不超过 64KB，键名命中敏感词时会被拒绝或脱敏"
+    },
+    "output_html": {
+      "type": "string",
+      "minLength": 100,
+      "maxLength": 2097152,
+      "description": "单文件 HTML：必须含 DOCTYPE/html/head/body，不得引用外部资源"
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "授权标识，例如 CC-BY-4.0、internal-reviewed；未知授权不得入库"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "采集来源：seed / manual / synthetic / partner-name"
+    },
+    "notes": {
+      "type": "string",
+      "description": "人工审核备注"
+    }
+  },
+  "additionalProperties": true
+}

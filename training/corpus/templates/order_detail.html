@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="$THEME">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>订单详情 · InTimeUI</title>
+  <style>
+    :root {
+      --bg: #f7f7f7;
+      --surface: #ffffff;
+      --surface-muted: #f0f0f0;
+      --text: #111111;
+      --text-muted: #666666;
+      --border: #d9d9d9;
+      --accent: #111111;
+      --accent-text: #ffffff;
+      --radius: 14px;
+      --space: 16px;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #0d0d0d;
+      --surface: #171717;
+      --surface-muted: #222222;
+      --text: #f5f5f5;
+      --text-muted: #a3a3a3;
+      --border: #333333;
+      --accent: #f5f5f5;
+      --accent-text: #111111;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif;
+      line-height: 1.55;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.02em; }
+    .theme-toggle {
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); opacity: 0.86; }
+    .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .theme-toggle:active { transform: translateY(0) scale(0.98); }
+    main { max-width: 880px; margin: 0 auto; padding: 28px 20px 48px; }
+    .page-title { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
+    .subtitle { margin: 0 0 24px; color: var(--text-muted); font-size: 14px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .meta-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .meta-value { font-size: 17px; font-weight: 650; margin-top: 4px; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      background: var(--surface-muted);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+    td.amount, th.amount { text-align: right; font-variant-numeric: tabular-nums; }
+    .total-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 16px; }
+    .total-label { color: var(--text-muted); }
+    .total-value { font-size: 28px; font-weight: 750; letter-spacing: -0.02em; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .button {
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+    .button:hover { transform: translateY(-1px); opacity: 0.88; }
+    .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .button:active { transform: scale(0.98); }
+    footer { max-width: 880px; margin: 0 auto; padding: 0 20px 32px; color: var(--text-muted); font-size: 12px; }
+    @media (max-width: 640px) {
+      .meta-grid { grid-template-columns: 1fr; }
+      main { padding: 20px 14px 36px; }
+      .card { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">InTimeUI · 订单</span>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题">切换主题</button>
+  </header>
+  <main>
+    <h1 class="page-title">订单详情</h1>
+    <p class="subtitle">订单号 $ORDER_ID · 共 $ITEM_COUNT 件商品</p>
+
+    <section class="card" aria-labelledby="order-meta-title">
+      <h2 id="order-meta-title" class="meta-label">订单信息</h2>
+      <div class="meta-grid">
+        <div>
+          <div class="meta-label">订单号</div>
+          <div class="meta-value">$ORDER_ID</div>
+        </div>
+        <div>
+          <div class="meta-label">订单状态</div>
+          <div class="meta-value"><span class="status" data-status="$STATUS">$STATUS_LABEL</span></div>
+        </div>
+        <div>
+          <div class="meta-label">商品数量</div>
+          <div class="meta-value">$TOTAL_QTY 件</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="items-title">
+      <h2 id="items-title" class="meta-label">商品明细</h2>
+      <table>
+        <thead>
+          <tr><th>商品</th><th>单价</th><th class="amount">数量</th><th class="amount">小计</th></tr>
+        </thead>
+        <tbody>
+          $ITEMS_ROWS
+        </tbody>
+      </table>
+      <div class="total-row">
+        <span class="total-label">金额合计</span>
+        <strong class="total-value">$TOTAL</strong>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="actions-title">
+      <h2 id="actions-title" class="meta-label">操作</h2>
+      <div class="actions">
+        <button class="button primary" type="button"
+          onclick="fetch('/api/v1/orders/$ORDER_ID/business-data',{headers:{'Accept':'application/json','Authorization':'Bearer '+IntimeUI.token()}}).then(function(r){return r.json()}).then(function(data){document.querySelector('[data-status]').textContent=data.data.status})">
+          刷新订单状态
+        </button>
+        <button class="button" type="button" onclick="history.back()">返回</button>
+      </div>
+    </section>
+  </main>
+  <footer>页面由 InTimeUI 生成 · 所有数据仅用于当前会话</footer>
+  <script>
+    (function () {
+      var key = 'intimeui_token';
+      window.IntimeUI = window.IntimeUI || {};
+      window.IntimeUI.token = function () {
+        return window.__INTIMEUI_TOKEN__ || localStorage.getItem(key) || '';
+      };
+      var toggle = document.getElementById('theme-toggle');
+      toggle.addEventListener('click', function () {
+        var root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+    })();
+  </script>
+</body>
+</html>

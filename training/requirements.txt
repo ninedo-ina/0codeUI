@@ -1,0 +1,9 @@
+# 训练环境依赖（Python 3.10–3.12，CUDA 12.4）
+# 仅真实训练需要；语料清洗 / 评测 / 清单校验只依赖标准库。
+# 建议在独立 venv 中安装，避免与推理服务环境混用。
+torch==2.5.1
+transformers==4.49.0
+peft==0.14.0
+accelerate==1.4.0
+bitsandbytes==0.45.3
+safetensors==0.5.2

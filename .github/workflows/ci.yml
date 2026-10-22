@@ -45,3 +45,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --all-features --locked
       - run: cargo test --workspace --all-features --locked
+
+  training:
+    name: training pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: python3 -m unittest discover -s training/tests -t training -v
+      - name: Mock end-to-end smoke
+        run: python3 training/scripts/smoke_pipeline.py
